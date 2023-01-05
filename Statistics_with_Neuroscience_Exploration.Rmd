@@ -9,4 +9,8 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-w
+```{r}
+Food_Day_10 <- read.csv('Appetitive_Day_10.csv')
+Shock_Day_11 <- read.csv('Aversive_Day_11.csv')
+Test_Day_12 <- read.csv('Tone_only_test_Day_12.csv')
+```
