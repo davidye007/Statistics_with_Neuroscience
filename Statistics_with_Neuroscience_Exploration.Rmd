@@ -9,8 +9,43 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r}
-Food_Day_10 <- read.csv('Appetitive_Day_10.csv')
-Shock_Day_11 <- read.csv('Aversive_Day_11.csv')
-Test_Day_12 <- read.csv('Tone_only_test_Day_12.csv')
+```{r import data}
+Food_Day_10_Read <- read.csv('Appetitive_Day_10.csv')
+Shock_Day_11_Read <- read.csv('Aversive_Day_11.csv')
+Test_Day_12_Read <- read.csv('Tone_only_test_Day_12.csv')
+```
+
+```{r remove unnecessary row}
+Food_Day_10 <- Food_Day_10_Read[-1,]
+Shock_Day_11 <- Shock_Day_11_Read[-1,]
+Test_Day_12 <- Test_Day_12_Read[-1,]
+```
+
+```{r group trials together}
+Food_Day_10 <- Food_Day_10[order(Food_Day_10$X),]
+Shock_Day_11 <- Shock_Day_11[order(Shock_Day_11$X),]
+Test_Day_12 <- Test_Day_12[order(Test_Day_12$X),]
+```
+
+
+```{r remove unnecessary column}
+Food_Day_10 <- Food_Day_10[,-1]
+Shock_Day_11 <- Shock_Day_11[,-1]
+Test_Day_12 <- Test_Day_12[,-1]
+```
+
+```{r data frame to numerical matrix}
+Food_Day_10 <- as.matrix(sapply(Food_Day_10, as.numeric))
+Shock_Day_11 <- as.matrix(sapply(Shock_Day_11, as.numeric))
+Test_Day_12 <- as.matrix(sapply(Test_Day_12, as.numeric))
+```
+
+```{r remove rows with NA elements}
+Food_Day_10 <- Food_Day_10[!rowSums(is.na(Food_Day_10)),]
+Shock_Day_11 <- Shock_Day_11[!rowSums(is.na(Shock_Day_11)),]
+Test_Day_12 <- Test_Day_12[!rowSums(is.na(Test_Day_12)),]
+```
+
+```{r 2D array/matrix to 3D array/matrix}
+### todo
 ```
