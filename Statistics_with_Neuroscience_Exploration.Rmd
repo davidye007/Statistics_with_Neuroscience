@@ -48,19 +48,35 @@ Shock_Day_11 <- array(Shock_Day_11, dim = c(519,10,598)) #(519 neurons, 10 trial
 Test_Day_12 <- array(Test_Day_12, dim = c(787,20,598)) #(787 neurons, 20 trials, 598 time points)
 ```
 
-```{r neuron activity portrait function}
-neuron_activity_portrait <- function(activity) {
-  timepoints <- 1:length(activity)
-  df <- data.frame(timepoints, activity)
-  ggplot(df, aes(x = timepoints, y = activity)) + geom_path() +
-    xlab('Time Points') + ylab('dF/F') + ggtitle('Neuron Activity Portrait') +
-    theme(plot.title = element_text(hjust = 0.5)) + 
+```{r neuron activity portrait marked function}
+neuron_activity_portrait_marked <- function(activity) {
+    neuron_activity_portrait(activity) +
     geom_vline(xintercept = 300) + geom_vline(xintercept = 400) +
     geom_vline(xintercept = 430,color = 'red')
 }
 ```
 
 ```{r}
-v <- Shock_Day_11[3,1,]
-neuron_activity_portrait(v)
+for (x in 1:10) {
+  v <- Shock_Day_11[3,x,]
+  print(neuron_activity_portrait_marked(v))
+}
 ```
+```{r compare between two trials}
+### absolute value difference
+### difference limit criterion based off average variance/standard deviation?
+v <- abs(Shock_Day_11[3,1,] - Shock_Day_11[3,5,])
+print(neuron_activity_portrait(v))
+```
+
+```{r neuron activity portrait}
+neuron_activity_portrait <- function(activity) {
+  timepoints <- 1:length(activity)
+  df <- data.frame(timepoints, activity)
+  plot <- ggplot(df, aes(x = timepoints, y = activity)) + geom_path() +
+    xlab('Time Points') + ylab('dF/F') + ggtitle('Neuron Activity Portrait') +
+    theme(plot.title = element_text(hjust = 0.5))
+  return (plot)
+}
+```
+
