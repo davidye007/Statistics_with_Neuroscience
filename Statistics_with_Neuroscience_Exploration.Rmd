@@ -8,6 +8,7 @@ output: pdf_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
+library(ggpubr)
 ```
 
 ```{r import data}
@@ -48,35 +49,94 @@ Shock_Day_11 <- array(Shock_Day_11, dim = c(519,10,598)) #(519 neurons, 10 trial
 Test_Day_12 <- array(Test_Day_12, dim = c(787,20,598)) #(787 neurons, 20 trials, 598 time points)
 ```
 
-```{r neuron activity portrait marked function}
-neuron_activity_portrait_marked <- function(activity) {
-    neuron_activity_portrait(activity) +
-    geom_vline(xintercept = 300) + geom_vline(xintercept = 400) +
-    geom_vline(xintercept = 430,color = 'red')
-}
-```
-
-```{r}
-for (x in 1:100) {
-  v <- Food_Day_10[x,1,]
-  print(neuron_activity_portrait_marked(v))
-}
-```
-```{r compare between two trials}
-### absolute value difference
-### difference limit criterion based off average variance/standard deviation?
-v <- abs(Shock_Day_11[3,1,] - Shock_Day_11[3,5,])
-print(neuron_activity_portrait(v))
-```
-
-```{r neuron activity portrait}
-neuron_activity_portrait <- function(activity) {
-  timepoints <- 1:length(activity)
-  df <- data.frame(timepoints, activity)
-  plot <- ggplot(df, aes(x = timepoints, y = activity)) + geom_path() +
+```{r neuron activity portrait function}
+### neuron activity portrait, takes a single vector of a single neuron,
+### a single trial, and all time points and returns a plot
+neuron_activity_portrait <- function(neuron_activity) {
+  timepoints <- 1:length(neuron_activity)
+  df <- data.frame(timepoints, neuron_activity)
+  plot <- ggplot(df, aes(x = timepoints, y = neuron_activity)) + geom_path() +
     xlab('Time Points') + ylab('dF/F') + ggtitle('Neuron Activity Portrait') +
     theme(plot.title = element_text(hjust = 0.5))
   return (plot)
 }
 ```
 
+```{r neuron activity portrait marked function}
+### takes in a single vector (single neuron, single trial, and all time points)
+### and returns a neuron activity portrait with event times marked with vertical lines
+neuron_activity_portrait_marked <- function(activity) {
+    plot <- neuron_activity_portrait(activity) +
+    geom_vline(xintercept = 300) + geom_vline(xintercept = 400) +
+    geom_vline(xintercept = 430,color = 'red')
+    return (plot)
+}
+```
+
+
+```{r boxplot}
+### returns plot of boxplot comparisons between different stages in the
+### time points
+comp_box <- function(neuron_activity) {
+  df <- data.frame(
+    #stage <- rep(c('baseline','tone','pre_stimulant','post_stimulant'),times=c(299,100,30,length(neuron_activity)-429)),
+    stage <- rep(c('baseline','tone','pre_stimulant','post_stimulant'),times=c(299,100,30,30)),
+    #neuron_activity
+    neuron_activity <- neuron_activity[1:459]
+  )
+  df$stage <- factor(df$stage , levels=c('baseline','tone','pre_stimulant','post_stimulant'))
+  compbox <- ggplot(df, aes(x = stage, y = neuron_activity)) +
+  geom_boxplot()
+  return (compbox)
+}
+```
+
+```{r group plots}
+### prints the portrait and the boxplot along with a neuron number if given
+show_all <- function(neuron_activity,neuron_id = 0) {
+  med <- comp_box(neuron_activity)
+  portrait <- neuron_activity_portrait_marked(neuron_activity)
+  plot_all <- ggarrange(portrait, med,labels = c(neuron_id),
+          ncol = 2, nrow = 1)
+  print(plot_all)
+}
+```
+
+```{r}
+### single test case
+show_all(neuron_activity = Shock_Day_11[46,1,], neuron_id = 46)
+```
+
+```{r}
+### multiple neurons test case
+for (x in 1:50) {
+  v <- Test_Day_12[x,1,]
+  show_all(neuron_activity = v, neuron_id = x)
+}
+```
+
+```{r significant post-event activation}
+### absolute value difference
+### if IQR after event is greater than baseline range * 1.5 (or IQR),
+### then significantly more activated
+
+v <- abs(Shock_Day_11[3,1,] - Shock_Day_11[3,5,])
+print(neuron_activity_portrait(v))
+```
+
+```{r test for difference between different neurons or trials}
+### trend
+### cross-correlation
+### ARIMA model and compare parameters
+### L-2 distance function
+### normalize data first
+### time-series comparison
+
+```
+
+```{r}
+activated <- function(neuron_activity) {
+  baseline_med <- median(neuron_activity[1:299])
+  tone_med <- median(neuron_activity[300:299])
+}
+```
