@@ -73,7 +73,6 @@ neuron_activity_portrait_marked <- function(activity) {
 }
 ```
 
-
 ```{r boxplot}
 ### returns plot of boxplot comparisons between different stages in the
 ### time points
@@ -109,9 +108,10 @@ show_all(neuron_activity = Shock_Day_11[46,1,], neuron_id = 46)
 
 ```{r}
 ### multiple neurons test case
-for (x in 1:50) {
+for (x in 1:10) {
   v <- Test_Day_12[x,1,]
-  show_all(neuron_activity = v, neuron_id = x)
+  #show_all(neuron_activity = v, neuron_id = x)
+  show_all(neuron_activity = Shock_Day_11[46,x,], neuron_id = x)
 }
 ```
 
@@ -139,4 +139,13 @@ activated <- function(neuron_activity) {
   baseline_med <- median(neuron_activity[1:299])
   tone_med <- median(neuron_activity[300:299])
 }
+```
+
+```{r}
+arima(Shock_Day_11[3,1,])
+arima(Shock_Day_11[3,2,])
+tt <- as.ts(Shock_Day_11[3,2,]);
+units <- ts(Shock_Day_11[3,2,], frequency = 100)
+plot(decompose(units))
+neuron_activity_portrait(Shock_Day_11[3,2,])
 ```
