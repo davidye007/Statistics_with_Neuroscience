@@ -57,8 +57,8 @@ neuron_activity_portrait_marked <- function(activity) {
 ```
 
 ```{r}
-for (x in 1:10) {
-  v <- Shock_Day_11[3,x,]
+for (x in 1:100) {
+  v <- Food_Day_10[x,1,]
   print(neuron_activity_portrait_marked(v))
 }
 ```
