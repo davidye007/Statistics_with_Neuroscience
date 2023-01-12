@@ -17,6 +17,9 @@ Shock_Day_11_Read <- read.csv('Aversive_Day_11.csv')
 Test_Day_12_Read <- read.csv('Tone_only_test_Day_12.csv')
 ```
 
+```{r}
+head(Food_Day_10_Read)
+```
 ```{r creating 3D objects}
 ### remove row containing labels "both", "food", etc.
 Food_Day_10 <- Food_Day_10_Read[-1,]
@@ -48,6 +51,11 @@ Food_Day_10 <- array(Food_Day_10, dim = c(872,20,720)) #(872 neurons, 20 trials,
 Shock_Day_11 <- array(Shock_Day_11, dim = c(519,10,598)) #(519 neurons, 10 trials, 598 time points)
 Test_Day_12 <- array(Test_Day_12, dim = c(787,20,598)) #(787 neurons, 20 trials, 598 time points)
 ```
+
+```{r}
+Food_Day_10[10,5,1:20]
+```
+
 
 ```{r neuron activity portrait function}
 ### neuron activity portrait, takes a single vector of a single neuron,
