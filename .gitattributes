@@ -2,3 +2,4 @@ CeA_appetitive_aversive.xlsx filter=lfs diff=lfs merge=lfs -text
 Appetitive_Day_10.csv filter=lfs diff=lfs merge=lfs -text
 Aversive_Day_11.csv filter=lfs diff=lfs merge=lfs -text
 Tone_only_test_Day_12.csv filter=lfs diff=lfs merge=lfs -text
+3D_Activation_Object.RData filter=lfs diff=lfs merge=lfs -text
