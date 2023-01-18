@@ -1,0 +1,89 @@
+---
+title: "ARIMA_Neuro_Exploration"
+author: "David Ye"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library('seasonal')
+library('TSclust')
+library('tseries')
+library('forecast')
+library('bayesforecast')
+library('lmtest')
+```
+
+```{r load data}
+load("3D_Activation_Object.RData")
+```
+
+```{r}
+ts(sample)
+```
+
+```{r}
+sample_1 <- Shock_Day_11[10,1,]
+sample_2 <- Shock_Day_11[10,2,]
+sample_3 <- Shock_Day_11[1,1,]
+sample_4 <- Shock_Day_11[1,2,]
+neuron_activity_portrait_marked(sample_1)
+neuron_activity_portrait_marked(sample_2)
+neuron_activity_portrait_marked(sample_3)
+neuron_activity_portrait_marked(sample_4)
+#stl_decomp <- stl(ts(sample,frequency = 30),s.window = "periodic", robust=TRUE)
+#plot(stl_decomp)
+sample_1_diff <- diff(sample_1, differences = 2)
+#neuron_activity_portrait_marked(sample_1_diff)
+adf.test(sample_1_diff)
+```
+```{r}
+grangertest(sample_1 ~ sample_2, order = 1)
+grangertest(sample_3 ~ sample_4, order = 1)
+```
+
+```{r}
+sample_1_ar <- auto.arima(sample_1, stationary = F, approximation = F,allowdrift=T, seasonal = T)
+sample_2_ar <- auto.arima(sample_2, stationary = F, approximation = F,allowdrift=T, seasonal = T)
+sample_3_ar <- auto.arima(sample_3, stationary = F, approximation = F,allowdrift=T, seasonal = T)
+sample_4_ar <- auto.arima(sample_4, stationary = F, approximation = F,allowdrift=T, seasonal = T)
+sample_1_forecast <- forecast(sample_1_ar,h = 100,level = 95)
+sample_2_forecast <- forecast(sample_2_ar,h = 100,level = 95)
+sample_3_forecast <- forecast(sample_3_ar,h = 100,level = 95)
+autoplot(forecast(sample_1_forecast))
+autoplot(forecast(sample_2_forecast))
+autoplot(forecast(sample_3_forecast))
+#futurVal <- forecast.Arima(fitARIMA,h=10, level=c(99.5))
+#plot.forecast(futurVal)
+checkresiduals(sample_1_forecast)
+checkresiduals(sample_2_forecast)
+checkresiduals(sample_3_forecast)
+boxplot(sample_1_forecast$residuals)
+boxplot(sample_2_forecast$residuals)
+boxplot(sample_3_forecast$residuals)
+
+plot(sample_1_forecast$x,col="red")
+lines(fitted(sample_1_forecast),col="blue")
+
+plot(sample_2_forecast$x,col="red")
+lines(fitted(sample_2_forecast),col="blue")
+
+plot(sample_3_forecast$x,col="red")
+lines(fitted(sample_3_forecast),col="blue")
+
+#auto.sarima(sample_1)
+```
+
+```{r}
+series = rbind(sample_1, sample_2)
+diss(series, "CDM", type="gzip")
+series = rbind(sample_1, sample_3)
+diss(series, "CDM", type="gzip")
+series = rbind(sample_2, sample_3)
+diss(series, "CDM", type="gzip")
+series = rbind(sample_3, sample_4)
+diss(series, "CDM", type="gzip")
+series = rbind(sample_2, sample_4)
+diss(series, "CDM", type="gzip")
+```
