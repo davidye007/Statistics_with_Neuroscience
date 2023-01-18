@@ -44,10 +44,15 @@ grangertest(sample_3 ~ sample_4, order = 1)
 ```
 
 ```{r}
-sample_1_ar <- auto.arima(sample_1, stationary = F, approximation = F,allowdrift=T, seasonal = T)
-sample_2_ar <- auto.arima(sample_2, stationary = F, approximation = F,allowdrift=T, seasonal = T)
-sample_3_ar <- auto.arima(sample_3, stationary = F, approximation = F,allowdrift=T, seasonal = T)
-sample_4_ar <- auto.arima(sample_4, stationary = F, approximation = F,allowdrift=T, seasonal = T)
+# sample_1_ar <- auto.arima(sample_1, stationary = F, approximation = F,allowdrift=T, seasonal = T)
+# sample_2_ar <- auto.arima(sample_2, stationary = F, approximation = F,allowdrift=T, seasonal = T)
+# sample_3_ar <- auto.arima(sample_3, stationary = F, approximation = F,allowdrift=T, seasonal = T)
+# sample_4_ar <- auto.arima(sample_4, stationary = F, approximation = F,allowdrift=T, seasonal = T)
+sample_1_ar <- arima(sample_1, c(0,1,1))
+sample_2_ar <- arima(sample_2, c(0,1,1))
+sample_3_ar <- arima(sample_3, c(0,1,1))
+sample_4_ar <- arima(sample_4, c(0,1,1))
+
 sample_1_forecast <- forecast(sample_1_ar,h = 100,level = 95)
 sample_2_forecast <- forecast(sample_2_ar,h = 100,level = 95)
 sample_3_forecast <- forecast(sample_3_ar,h = 100,level = 95)
@@ -86,4 +91,12 @@ series = rbind(sample_3, sample_4)
 diss(series, "CDM", type="gzip")
 series = rbind(sample_2, sample_4)
 diss(series, "CDM", type="gzip")
+```
+
+```{r}
+confint(sample_1_ar)
+confint(sample_2_ar)
+confint(sample_3_ar)
+confint(sample_4_ar)
+anova(sample_1_ar)
 ```

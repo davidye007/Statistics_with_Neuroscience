@@ -15,7 +15,6 @@ library(ggpubr)
 load("3D_Activation_Object.RData")
 ```
 
-
 ```{r neuron activity portrait function}
 ### neuron activity portrait, takes a single vector of a single neuron,
 ### a single trial, and all time points and returns a plot
@@ -76,9 +75,9 @@ show_all(neuron_activity = Shock_Day_11[46,1,], neuron_id = 46)
 ```{r}
 ### multiple neurons test case
 for (x in 1:10) {
-  v <- Test_Day_12[x,1,]
+  v <- Shock_Day_11[10,x,]
   #show_all(neuron_activity = v, neuron_id = x)
-  show_all(neuron_activity = Shock_Day_11[46,x,], neuron_id = x)
+  show_all(neuron_activity = Shock_Day_11[10,x,], neuron_id = x)
 }
 ```
 
