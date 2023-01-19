@@ -1,0 +1,158 @@
+---
+title: "Time Series for Neuroscience"
+author: "David Ye"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library('tidyverse')
+library('forecast')
+```
+
+**Time Series Data**
+```{r}
+load("3D_Activation_Object.RData")
+### demo purposes:
+### neuron 1, trial 1, 720 time points)
+### neuron 1, trial 2, 720 time points)
+### neuron 2, trial 1, 720 time points)
+demo <- Food_Day_10[1,1,]
+demo2 <- Food_Day_10[1,2,]
+demo3 <- Food_Day_10[2,1,]
+### transform vector into time series object with start and frequency set to 1
+demo_ts <- ts(demo, start = 1,frequency = 1)
+demo_ts_2 <- ts(demo2, start = 1,frequency = 1)
+demo_ts_3 <- ts(demo3, start = 1,frequency = 1)
+### returns 1 suggesting no dominant seasonality exist
+findfrequency(demo_ts)
+### time series plot
+plot(demo_ts)
+plot(demo_ts_2)
+plot(demo_ts_3)
+```
+
+**Exploring Trend and Seasonality**
+Original Time series = Trend/Cycle + Season + Error (additive decomposition)
+```{r}
+### additive decomposition fails due to lack of seasonality : 
+### decompose(demo_ts, type = "additive")
+### lag plot
+gglagplot(demo_ts)
+### ACF coefficients
+acf(demo_ts,plot = F,lag.max = 50)
+### ACF plot
+acf(demo_ts,lag.max = 50)
+```
+Examining the ACF plot, there are no apparent seasonal lag patterns suggesting no seasonality in our data. However, the plot consists of large ACF values that slowly decrease as number of lags increase, suggesting a strong trend in our time series.
+
+**Exponential Model:**
+
+```{r}
+# alpha = higher alpha puts more weight on most recent observations
+# beta = trend value, higher beta means trend slope more dependent on recent
+# trend slope
+# gamma = higher gamma puts more weighting on most recent seasonal cycles
+
+# fit exponential smoothing model
+fit_1 <- HoltWinters(demo_ts,alpha =0.025, beta = F, gamma = F)
+fit_2 <- HoltWinters(demo_ts_2,alpha =0.025, beta = F, gamma = F)
+fit_3 <- HoltWinters(demo_ts_3,alpha =0.025, beta = F, gamma = F)
+# plot fitted models
+plot(fit_1)
+plot(fit_2)
+plot(fit_3)
+plot(fit_1$fitted[,1],type="l",col="red")
+lines(fit_2$fitted[,1],col="purple")
+lines(fit_3$fitted[,1],col="green")
+# difference between same neurons different trials
+plot(abs(fit_1$fitted[,1]-fit_2$fitted[,1]))
+same <- sum(abs(fit_1$fitted[,1]-fit_2$fitted[,1]))
+# difference between different neurons same trial
+plot(abs(fit_1$fitted[,1]-fit_3$fitted[,1]))
+diff_1 <- sum(abs(fit_1$fitted[,1]-fit_3$fitted[,1]))
+# difference between different neurons different trial
+lines(abs(fit_2$fitted[,1]-fit_3$fitted[,1]))
+diff_2 <- sum(abs(fit_2$fitted[,1]-fit_3$fitted[,1]))
+
+paste('same:',same,'diff(1):',diff_1,'diff(2):',diff_2)
+# possibility: average absolute error for same neurons to get baseline
+# compare difference between other neurons/segments to this baseline
+# if inside the 95% confidence interval of baseline, then can't tell if neuron
+# is different, else neuron is different.
+```
+
+**ARIMA Model**
+```{r}
+### not stationary
+adf.test(demo_ts)
+plot(demo_ts)
+### stationary after taking differences once
+diff_1 <- diff(demo_ts)
+adf.test(diff_1)
+plot(diff_1)
+
+### not stationary at alpha = 0.05
+adf.test(demo_ts_3)
+plot(demo_ts_3)
+### stationary after taking differences once
+diff_3 <- diff(demo_ts_3)
+adf.test(diff_3)
+plot(diff_3)
+```
+Observed that after differencing of order 1, key elements that make the time series unique/different from each other are eliminated.
+
+```{r}
+### autofit ARIMA models (automatically chooses, AR, MA, and Differencing
+### parameters)
+arima_1 <- auto.arima(demo_ts, stationary = F, approximation = F)
+arima_2 <- auto.arima(demo_ts_2, stationary = F, approximation = F)
+arima_3 <- auto.arima(demo_ts_3, stationary = F, approximation = F)
+### plot model with given data
+plot(arima_1$x, col = 'red')
+lines(arima_1$fitted, col = 'blue')
+### forecasting into the future 100 time steps
+arima_1_forecast <- forecast(arima_1,h = 100,level = 95)
+arima_2_forecast <- forecast(arima_2,h = 100,level = 95)
+arima_3_forecast <- forecast(arima_3,h = 100,level = 95)
+autoplot(forecast(arima_1_forecast))
+autoplot(forecast(arima_2_forecast))
+autoplot(forecast(arima_3_forecast))
+### confidence interval of coefficients to fitted ARIMA models
+confint(arima_1)
+confint(arima_2)
+confint(arima_3)
+```
+
+
+```{r}
+### fit same number of MA terms and differencing in ARIMA model
+arima_1 <- arima(demo_ts, c(0,1,1))
+arima_2 <- arima(demo_ts_2, c(0,1,1))
+arima_3 <- arima(demo_ts_3, c(0,1,1))
+### additional sample neuron
+demo_ts_4 <- ts(Food_Day_10[2,2,], start = 1,frequency = 1)
+arima_4 <- arima(demo_ts_4, c(0,1,1))
+### confidence interval of coefficients to fitted ARIMA models
+### neuron 1 different trials
+confint(arima_1)
+confint(arima_2)
+### neuron 2 different trials
+confint(arima_3)
+confint(arima_4)
+```
+The confidence interval of coefficients from the same neuron are very similar. The confidence interval of coefficients from a different neuron is outside this interval. Possibly look at volatility of models in the future with ARCH and GARCH models.
+
+```{r}
+### exploring ARIMA forecasting
+predict_1 <- arima.sim(list(ar=0,ma=fit$arima_1["ma1"]),sd=sqrt(arima_1$sigma2),200)
+plot(predict_1)
+
+predict_2 <- arima.sim(list(ar=0,ma=fit$arima_2["ma1"]),sd=sqrt(arima_2$sigma2),200)
+plot(predict_2)
+
+predict_3 <- arima.sim(list(ar=0,ma=fit$arima_3["ma1"]),sd=sqrt(arima_3$sigma2),200)
+plot(predict_3)
+```
+Predictions look similar likely due to differencing.

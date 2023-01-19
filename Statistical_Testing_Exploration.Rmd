@@ -38,20 +38,22 @@ sample_1_diff <- diff(sample_1, differences = 2)
 #neuron_activity_portrait_marked(sample_1_diff)
 adf.test(sample_1_diff)
 ```
+
+
 ```{r}
-grangertest(sample_1 ~ sample_2, order = 1)
-grangertest(sample_3 ~ sample_4, order = 1)
+grangertest(sample_1 ~ sample_2)
+grangertest(sample_3 ~ sample_4)
 ```
 
 ```{r}
-# sample_1_ar <- auto.arima(sample_1, stationary = F, approximation = F,allowdrift=T, seasonal = T)
-# sample_2_ar <- auto.arima(sample_2, stationary = F, approximation = F,allowdrift=T, seasonal = T)
-# sample_3_ar <- auto.arima(sample_3, stationary = F, approximation = F,allowdrift=T, seasonal = T)
-# sample_4_ar <- auto.arima(sample_4, stationary = F, approximation = F,allowdrift=T, seasonal = T)
-sample_1_ar <- arima(sample_1, c(0,1,1))
-sample_2_ar <- arima(sample_2, c(0,1,1))
-sample_3_ar <- arima(sample_3, c(0,1,1))
-sample_4_ar <- arima(sample_4, c(0,1,1))
+sample_1_ar <- auto.arima(sample_1, stationary = F, approximation = F)
+sample_2_ar <- auto.arima(sample_2, stationary = F, approximation = F)
+sample_3_ar <- auto.arima(sample_3, stationary = F, approximation = F)
+sample_4_ar <- auto.arima(sample_4, stationary = F, approximation = F)
+# sample_1_ar <- arima(sample_1, c(1,1,2))
+# sample_2_ar <- arima(sample_2, c(1,1,2))
+# sample_3_ar <- arima(sample_3, c(1,1,2))
+# sample_4_ar <- arima(sample_4, c(1,1,2))
 
 sample_1_forecast <- forecast(sample_1_ar,h = 100,level = 95)
 sample_2_forecast <- forecast(sample_2_ar,h = 100,level = 95)
@@ -98,5 +100,31 @@ confint(sample_1_ar)
 confint(sample_2_ar)
 confint(sample_3_ar)
 confint(sample_4_ar)
-anova(sample_1_ar)
+
+
+sample_1_ar$coef["ar1"]
+```
+
+
+```{r}
+
+
+good_model_1 <- arima.sim(list(ar=0,ma=fit$sample_1_ar["ma1"]),sd=sample_1_ar$sigma,500)
+plot(good_model_1)
+
+
+good_model_2 <- arima.sim(list(ar=0,ma=fit$sample_2_ar["ma1"]),sd=sample_2_ar$sigma,500)
+plot(good_model_2)
+
+
+good_model_3 <- arima.sim(list(ar=sample_3_ar$coef["ar1"],ma=fit$sample_3_ar["ma1"]),sd=sample_3_ar$sigma,500)
+plot(good_model_3)
+
+good_model_4 <- arima.sim(list(ar=0,ma=fit$sample_4_ar["ma1"]),sd=sample_4_ar$sigma,500)
+plot(good_model_4)
+```
+
+```{r}
+grangertest(good_model_1~good_model_2)
+
 ```
