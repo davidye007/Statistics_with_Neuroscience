@@ -9,6 +9,11 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 library('tidyverse')
 library('forecast')
+library('seasonal')
+library('TSclust')
+library('tseries')
+library('bayesforecast')
+library('lmtest')
 ```
 
 **Time Series Data**
@@ -45,6 +50,7 @@ acf(demo_ts,plot = F,lag.max = 50)
 ### ACF plot
 acf(demo_ts,lag.max = 50)
 ```
+
 Examining the ACF plot, there are no apparent seasonal lag patterns suggesting no seasonality in our data. However, the plot consists of large ACF values that slowly decrease as number of lags increase, suggesting a strong trend in our time series.
 
 **Exponential Model:**
@@ -101,6 +107,7 @@ diff_3 <- diff(demo_ts_3)
 adf.test(diff_3)
 plot(diff_3)
 ```
+
 Observed that after differencing of order 1, key elements that make the time series unique/different from each other are eliminated.
 
 ```{r}
@@ -141,18 +148,22 @@ confint(arima_2)
 ### neuron 2 different trials
 confint(arima_3)
 confint(arima_4)
+
+arima_1$coef
 ```
+
 The confidence interval of coefficients from the same neuron are very similar. The confidence interval of coefficients from a different neuron is outside this interval. Possibly look at volatility of models in the future with ARCH and GARCH models.
 
 ```{r}
 ### exploring ARIMA forecasting
-predict_1 <- arima.sim(list(ar=0,ma=fit$arima_1["ma1"]),sd=sqrt(arima_1$sigma2),200)
+predict_1 <- arima.sim(list(ar=0,ma=arima_1$coef),sd=sqrt(arima_1$sigma2),200)
 plot(predict_1)
 
-predict_2 <- arima.sim(list(ar=0,ma=fit$arima_2["ma1"]),sd=sqrt(arima_2$sigma2),200)
+predict_2 <- arima.sim(list(ar=0,ma=arima_2$coef),sd=sqrt(arima_2$sigma2),200)
 plot(predict_2)
 
-predict_3 <- arima.sim(list(ar=0,ma=fit$arima_3["ma1"]),sd=sqrt(arima_3$sigma2),200)
+predict_3 <- arima.sim(list(ar=0,ma=arima_3$coef),sd=sqrt(arima_3$sigma2),200)
 plot(predict_3)
 ```
+
 Predictions look similar likely due to differencing.
