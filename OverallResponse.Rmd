@@ -1,0 +1,128 @@
+---
+title: "OverallResponse"
+author: "David Ye"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r}
+load("3D_Activation_Object.RData")
+length(Test_Day_12[1,,1])
+total_activation(Food_Day_10)
+total_activation(Shock_Day_11)
+total_activation(Test_Day_12)
+```
+```{r}
+rand <- runif(10, min=1, max=500)
+for(y in rand) {
+  for (x in 1:5) {
+    v <- Food_Day_10[y,x,]
+    plot(neuron_activity_portrait_marked(v))
+  }
+}
+
+```
+
+
+```{r}
+total_activation <- function(all_day) {
+  v <- rep(NA, length(all_day[1,1,]))
+  for (x in 1:length(all_day[1,1,])) {
+    for (y in 1:length(all_day[1,,1])) {
+      v[x] <- sum((all_day[,y,x]))/length(all_day[,1,1])
+    }
+  }
+  v <- smooth_signal(v)$data
+  v[,2] <- v[,2]/max(v[,2])
+  return (v)
+  #plot(neuron_activity_portrait_marked(v))
+}
+```
+
+```{r}
+hi <- Test_Day_12[1,,]
+dim(hi)
+```
+
+```{r}
+### trial by time step (specific neuron)
+average_trials <- function(neuron_signals) {
+  v <- rep(NA, length(neuron_signals[1,]))
+  for (x in 1:length(neuron_signals[1,])) {
+    v[x] <- sum((neuron_signals[,x]))/length(neuron_signals[,1])
+  }
+  v <- smooth_signal(v)$data
+  v[,2] <- v[,2]/max(v[,2])
+  
+  
+  return (v)
+}
+
+```
+
+```{r}
+a <- total_activation(Food_Day_10)
+b <- average_trials(Food_Day_10[7,,])
+v <- rep(1, length(Food_Day_10[1,1,]))
+#print(plot(a[]))
+
+#length(b[,2])
+#b[,2]
+
+plot((a[,2]))
+plot((b[,2]))
+```
+
+```{r}
+glob_neur_diff <- function(all_day) {
+  v <- rep(NULL, length(length(all_day[,1,1])))
+  global <- total_activation(all_day)
+  for (x in 1:length(all_day[,1,1])) {
+    trial <- (average_trials(all_day[x,,]))
+    v[x] <- sum(abs(global[,2] - trial[,2]))
+  }
+  return (v)
+}
+
+```
+
+
+```{r}
+
+#Food <- glob_neur_diff(Food_Day_10)
+min(Food)
+which.min(Food)
+Food[315]
+
+plot(average_trials(Food_Day_10[315,,])[,1],average_trials(Food_Day_10[315,,])[,2])
+for (i in 1:20) {
+  plot(neuron_activity_portrait_marked(Food_Day_10[315,i,]))
+}
+
+#v <- average_trials(Food_Day_10[315,,])
+#plot(v)
+#neuron_activity_portrait_marked(v[,2])
+# v <- v[order(v$neuron_activity),]
+# v <- rev(v)
+# v$timepoints
+# 
+# 
+# 
+# plot(neuron_activity_portrait_marked(Food_Day_10[179,1,]))
+# plot(neuron_activity_portrait_marked(Food_Day_10[179,1,]))
+# plot(neuron_activity_portrait_marked(Food_Day_10[429,1,]))
+# plot(neuron_activity_portrait_marked(Food_Day_10[204,1,]))
+# plot(neuron_activity_portrait_marked(Food_Day_10[316,1,]))
+# plot(neuron_activity_portrait_marked(Food_Day_10[224,1,]))
+```
+
+```{r}
+v <- Food_Day_10[10,4,]
+plot(v)
+v <- v - mean(v)
+step <- rbind(rep(1,length(v)), rep(-1,length(v)))
+conv <- convolve(v, step, type = "open")
+spikes <- which.max(conv)
+plot(conv,col = 'green')
+plot(neuron_activity_portrait(v,spike = spikes))
+```

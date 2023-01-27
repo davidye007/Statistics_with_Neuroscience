@@ -15,25 +15,67 @@ library('TSclust')
 library('tseries')
 library('bayesforecast')
 library('lmtest')
-```
-
-```{r graphically compare LOESS and Simple Exponential Smoothing}
-for (x in 1:20) {
-  v <- Shock_Day_11[x,1,]
-  d <- 1:length(v)
-  fit_1 <- HoltWinters(v,alpha =0.15, beta = F, gamma = F)
-  
-  e <- loess.as(d,v,criterion = 'aicc')
-  plot(d, v, type = "l", lty = 1, col = 'black')
-  lines(fit_1$fitted[,1], col = 'blue')
-  lines(e$fitted, col = 'red')
-}
-### LOESS -> DTW -> Adjacency Matrix -> Norms/Other metrics to compare similarity
-
+library('dtw')
 ```
 
 ```{r}
-sample_1 <- Food_Day_10[1,,1]
+for (x in 1:10) {
+  food <- Food_Day_10[1,x,]
+  food <- smooth_signal(food)
+  food_2 <- Food_Day_10[1,2,]
+  food_2 <- smooth_signal(food_2)
+  shock <- Shock_Day_11[1,x,]
+  shock <- smooth_signal(shock)
+  test <- Test_Day_12[1,x,]
+  test <- smooth_signal(test)
+}
+food <- (food$data[,2])
+food_2 <- (food_2$data[,2])
+shock <- (shock$data[,2])
 
+
+dtw <- dtw(food,food_2,keep=TRUE)
+dtw$distance
+dtw_2 <- dtw(food,shock,keep=TRUE)
+dtw_2$distance
+dtwPlotTwoWay(dtw)
+```
+
+```{r LOESS function}
+smooth_signal <- function(activity) {
+  timepoints <- 1:length(activity)
+  fit <- loess.as(timepoints,activity,criterion = 'aicc',plot = F)
+  return (neuron_activity_portrait_marked(fit$fitted))
+}
+```
+
+```{r DTW function}
+dtw <- function(fit_1, fit_2) {
+  return(dtw(fit_1, fit_2))
+}
+
+```
+
+```{r graphically compare LOESS and Simple Exponential Smoothing}
+# for (x in 1:10) {
+for (x in 1:100) {
+  v <- Food_Day_10[x,1,]
+  d <- 1:length(v)
+  e <- loess.as(d,v,criterion = 'aicc')
+  #lot(d, v, type = "l", lty = 1, col = 'black')
+  plot(neuron_activity_portrait_marked(e$fitted))
+}
+#   v <- Shock_Day_11[x,1,]
+#   d <- 1:length(v)
+#   fit_1 <- HoltWinters(v,alpha =0.15, beta = F, gamma = F)
+#   
+#   e <- loess.as(d,v,criterion = 'aicc')
+#   plot(d, v, type = "l", lty = 1, col = 'black')
+#   lines(fit_1$fitted[,1], col = 'blue')
+#   lines(e$fitted, col = 'red')
+# }
+# plot(e$y)
+# plot(e$fitted)
+### LOESS -> DTW -> Adjacency Matrix -> Norms/Other metrics to compare similarity
 
 ```

@@ -18,12 +18,16 @@ load("3D_Activation_Object.RData")
 ```{r neuron activity portrait function}
 ### neuron activity portrait, takes a single vector of a single neuron,
 ### a single trial, and all time points and returns a plot
-neuron_activity_portrait <- function(neuron_activity) {
+neuron_activity_portrait <- function(neuron_activity,spike = 0) {
   timepoints <- 1:length(neuron_activity)
   df <- data.frame(timepoints, neuron_activity)
   plot <- ggplot(df, aes(x = timepoints, y = neuron_activity)) + geom_path() +
     xlab('Time Points') + ylab('dF/F') + ggtitle('Neuron Activity Portrait') +
-    theme(plot.title = element_text(hjust = 0.5))
+    theme(plot.title = element_text(hjust = 0.5)) +
+    geom_vline(xintercept = spike,color = 'red')
+  # plot <- ggplot(df, aes(x = timepoints, y = neuron_activity)) + geom_point(shape = 1) +
+  #   xlab('Time Points') + ylab('dF/F') + ggtitle('Neuron Activity Portrait') +
+  #   theme(plot.title = element_text(hjust = 0.5))
   return (plot)
 }
 ```
@@ -108,10 +112,16 @@ activated <- function(neuron_activity) {
 ```
 
 ```{r}
-arima(Shock_Day_11[3,1,])
-arima(Shock_Day_11[3,2,])
-tt <- as.ts(Shock_Day_11[3,2,]);
-units <- ts(Shock_Day_11[3,2,], frequency = 100)
-plot(decompose(units))
-neuron_activity_portrait(Shock_Day_11[3,2,])
+# arima(Shock_Day_11[3,1,])
+# arima(Shock_Day_11[3,2,])
+# tt <- as.ts(Shock_Day_11[3,2,]);
+# units <- ts(Shock_Day_11[3,2,], frequency = 100)
+# plot(decompose(units))
+# neuron_activity_portrait(Shock_Day_11[3,2,])
+
+for (x in 1:10) {
+  v <- Shock_Day_11[10,x,]
+  #show_all(neuron_activity = v, neuron_id = x)
+  plot(neuron_activity_portrait(v))
+}
 ```
