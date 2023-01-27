@@ -1,0 +1,24 @@
+---
+title: "post-testing exploration"
+author: "David Ye"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+load("t_test.RData")
+load("MW_test.RData")
+```
+
+```{r}
+length(day_10_food_t_tests[day_10_food_t_tests<0.05])/(872*20)
+length(day_10_food_MW_tests[day_10_food_MW_tests<0.05])/(872*20)
+
+length(day_10_tone_t_tests[day_10_tone_t_tests<0.05])/(872*20)
+length(day_10_tone_MW_tests[day_10_tone_MW_tests<0.05])/(872*20)
+
+```
