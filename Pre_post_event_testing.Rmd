@@ -10,23 +10,22 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r}
-normalized_Day_10 <- normalize_avg(Food_Day_10)
-dtw_Day_10 <- dtwDist(normalized_Day_10,normalized_Day_10)
+# normalized_Day_10 <- normalize_avg(Food_Day_10)
+# dtw_Day_10 <- dtwDist(normalized_Day_10,normalized_Day_10)
 ```
 
 ```{r}
-normalized_Day_11 <-normalize_avg(Shock_Day_11)
-dtw_Day_11 <- dtwDist(normalized_Day_11,normalized_Day_11)
+# normalized_Day_11 <-normalize_avg(Shock_Day_11)
+# dtw_Day_11 <- dtwDist(normalized_Day_11,normalized_Day_11)
 ```
 
 ```{r}
-normalized_Day_12 <-normalize_avg(Test_Day_12)
-dtw_Day_12 <- dtwDist(normalized_Day_12,normalized_Day_12)
+# normalized_Day_12 <-normalize_avg(Test_Day_12)
+# dtw_Day_12 <- dtwDist(normalized_Day_12,normalized_Day_12)
 ```
 
 ```{r}
-save(dtw_Day_10, dtw_Day_11, dtw_Day_12, file = "adj_dtw.RData")
-
+#save(dtw_Day_10, dtw_Day_11, dtw_Day_12, file = "adj_dtw.RData")
 ```
 
 ```{r}
@@ -61,6 +60,63 @@ normalize_avg <- function(object) {
 
 dtw_dist <- function(avg_signals) {
   return (dtwDist(avg_signals,avg_signals,distance.only = T))
+}
+
+```
+
+```{r}
+print("Percentage Responsive for Day 10 Tone:")
+paste('t-test:',percentage_responsive(normalized_Day_10, t_test = TRUE, tone = TRUE))
+paste('MH-test:',percentage_responsive(normalized_Day_10, t_test = FALSE, tone = TRUE))
+
+print("Percentage Responsive for Day 10 Food:")
+paste('t-test:',percentage_responsive(normalized_Day_10, t_test = TRUE, tone = FALSE))
+paste('MH-test:',percentage_responsive(normalized_Day_10, t_test = FALSE, tone = FALSE))
+
+print("Percentage Responsive for Day 11 Tone:")
+paste('t-test:',percentage_responsive(normalized_Day_11, t_test = TRUE, tone = TRUE))
+paste('MH-test:',percentage_responsive(normalized_Day_11, t_test = FALSE, tone = TRUE))
+
+print("Percentage Responsive for Day 11 Shock:")
+paste('t-test:',percentage_responsive(normalized_Day_11, t_test = TRUE, tone = FALSE))
+paste('MH-test:',percentage_responsive(normalized_Day_11, t_test = FALSE, tone = FALSE))
+
+print("Percentage Responsive for Day 12 Tone:")
+paste('t-test:',percentage_responsive(normalized_Day_12, t_test = TRUE, tone = TRUE))
+paste('MH-test:',percentage_responsive(normalized_Day_12, t_test = FALSE, tone = TRUE))
+```
+
+```{r}
+percentage_responsive <- function(neu_by_time, t_test = TRUE, tone = TRUE) {
+  neurons <- length(neu_by_time[,1])
+  avg_t_test <- rep(NA, neurons)
+  for (i in 1:neurons) {
+    if(tone) {
+      pre_tone <- neu_by_time[i,100:300]
+      post_tone <- neu_by_time[i,301:400]
+      if(t_test) {
+        avg_t_test[i] <- (t.test(x = post_tone,y = pre_tone,alternative =
+                                         "greater", conf.level = 0.95)$p.value)
+      }
+      else {
+        avg_t_test[i] <- (wilcox.test(x = post_tone,y = pre_tone,alternative =
+                                         "greater", conf.level = 0.95, paired = F)$p.value)
+      }
+    }
+    else {
+      pre_food_shock <- neu_by_time[i,301:429]
+      post_food_shock <- neu_by_time[i,430:550]
+      if(t_test) {
+        avg_t_test[i] <- (t.test(x = post_food_shock,y = pre_food_shock,alternative =
+                                         "greater", conf.level = 0.95)$p.value)
+      }
+      else {
+        avg_t_test[i] <- (wilcox.test(x = post_food_shock,y = pre_food_shock,alternative =
+                                         "greater", conf.level = 0.95, paired = F)$p.value)
+      }
+    }
+  }
+  return (sum(avg_t_test < 0.05)/length(avg_t_test))
 }
 
 ```

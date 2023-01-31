@@ -1,0 +1,45 @@
+---
+title: "DTW_KNN"
+author: "David Ye"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+# dtw_Day_10_non_zero <- dtw_Day_10
+# similarity <- 1/dtw_Day_10_non_zero
+# 
+# for (i in 1:nrow(dtw_Day_10)) {
+#   for (j in 1:ncol(dtw_Day_10)) {
+#     if(dtw_Day_10[i,j]==0) {
+#       dtw_Day_10_non_zero[i,j] <- 1
+#     }
+#   }
+# }
+# similarity <- 1/dtw_Day_10_non_zero
+```
+
+```{r}
+# install.packages("igraph")
+# library(igraph)
+is_weighted(graph)
+a <- similarity[1:10,1:10]
+isSymmetric(similarity)
+graph <- graph_from_adjacency_matrix(a, mode = "undirected",weighted = TRUE )
+E(graph)$width<- E(graph)$weight
+plot(graph)
+```
+
+```{r}
+#plot(Food_Day_10[352,2,])
+#plot(Food_Day_10[1,1,])
+weighted_adj_matrix <- dtw_Day_10
+degree_matrix <- diag(rowSums(dtw_Day_10))
+laplacian <- degree_matrix - weighted_adj_matrix
+lap_eigen <- eigen(laplacian)
+plot(c(1:length(lap_eigen$values)),lap_eigen$values)
+```
