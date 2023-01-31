@@ -25,8 +25,7 @@ dtw_Day_12 <- dtwDist(normalized_Day_12,normalized_Day_12)
 ```
 
 ```{r}
-#save(dtw_Day_10, dtw_Day_11, dtw_Day_12, file = "adj_dtw.RData")
-save(dtw_Day_10, file = "adj_dtw.RData")
+save(dtw_Day_10, dtw_Day_11, dtw_Day_12, file = "adj_dtw.RData")
 
 ```
 
