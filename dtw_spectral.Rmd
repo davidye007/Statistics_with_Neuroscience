@@ -10,17 +10,30 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r}
-# dtw_Day_10_non_zero <- dtw_Day_10
-# similarity <- 1/dtw_Day_10_non_zero
-# 
-# for (i in 1:nrow(dtw_Day_10)) {
-#   for (j in 1:ncol(dtw_Day_10)) {
-#     if(dtw_Day_10[i,j]==0) {
-#       dtw_Day_10_non_zero[i,j] <- 1
-#     }
-#   }
-# }
-# similarity <- 1/dtw_Day_10_non_zero
+# nuerons x neurons
+dtw_Day_10
+#dtw_Day_11
+#dtw_Day_12
+```
+
+```{r}
+plot(Food_Day_10[352,1,])
+plot(Food_Day_10[1,1,])
+```
+
+```{r}
+dtw_Day_10_non_zero <- dtw_Day_10
+
+
+for (i in 1:nrow(dtw_Day_10)) {
+  for (j in 1:ncol(dtw_Day_10)) {
+    if(dtw_Day_10[i,j]==0) {
+      dtw_Day_10_non_zero[i,j] <- 1
+    }
+  }
+}
+
+similarity <- 1/dtw_Day_10_non_zero
 ```
 
 ```{r}
@@ -35,11 +48,24 @@ plot(graph)
 ```
 
 ```{r}
-#plot(Food_Day_10[352,2,])
-#plot(Food_Day_10[1,1,])
 weighted_adj_matrix <- dtw_Day_10
 degree_matrix <- diag(rowSums(dtw_Day_10))
 laplacian <- degree_matrix - weighted_adj_matrix
 lap_eigen <- eigen(laplacian)
-plot(c(1:length(lap_eigen$values)),lap_eigen$values)
+smallest_eigens <- lap_eigen$vectors[,(length(lap_eigen$values)-4):length(lap_eigen$values)-1]
+day_10_sc_kmeans <- kmeans(smallest_eigens, 15)
+#day_10_sc_kmeans$cluster
+
+
+```
+```{r}
+plot(smallest_eigens, col = day_10_sc_kmeans$cluster,xlim = c(0,0.01),ylim = c(0.2,-0.1))
+points(day_10_sc_kmeans$centers, col = 1:15, pch = 8)
+day_10_sc_kmeans$size
+which(day_10_sc_kmeans$cluster==2)
+plot(Food_Day_10[1,1,])
+plot(Food_Day_10[58,1,])
+plot(Food_Day_10[148,1,])
+plot(Food_Day_10[7,1,])
+plot(Food_Day_10[778,1,])
 ```
