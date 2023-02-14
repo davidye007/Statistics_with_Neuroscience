@@ -14,6 +14,7 @@ load("t_test.RData")
 load("MW_test.RData")
 ```
 
+
 ```{r}
 length(day_10_food_t_tests[day_10_food_t_tests<0.05])/(872*20)
 length(day_10_food_MW_tests[day_10_food_MW_tests<0.05])/(872*20)

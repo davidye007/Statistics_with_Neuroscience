@@ -1,0 +1,261 @@
+---
+title: "Randomization with Wrapping"
+author: "David Ye"
+date: "`r Sys.Date()`"
+output: html_document
+---
+```{r}
+library(truncnorm)
+```
+
+Method 0:
+randomly shuffle every point
+```{r}
+shuffle_t <- function(object, tone = FALSE) {
+  neurons <- length(object[,1,1])
+  trials <- length(object[1,,1])
+  all_tests <- matrix(NA, nrow = neurons, ncol = trials)
+  # randomization distribution with n = 1000 samples
+  n <- 1000
+  rand_dist <- rep(NA, n)
+  for (i in 1:neurons) {
+    for (j in 1:trials) {
+      if(tone) {
+        combined <- object[i,j,100:400]
+        for (k in 1:n) {
+          shuffled <- sample(combined)
+          rand_dist[k] <- (mean(shuffled[202:301])-mean(shuffled[1:201]))/
+            (sqrt(((length(shuffled[202:301])-1)*var(shuffled[202:301])+(length(shuffled[1:201])-1)*var(shuffled[1:201]))/
+                    (length(shuffled[202:301])+length(shuffled[1:201])-2))*
+               sqrt(1/length(shuffled[202:301])+1/length(shuffled[1:201])))
+        }
+        obs_stat <- as.numeric((t.test(x = object[i,j,301:400],y = object[i,j,100:300],
+                                     conf.level = 0.95)$statistic))
+      }
+      else {
+        combined <- object[i,j,301:550]
+        for (k in 1:n) {
+          shuffled <- sample(combined)
+          rand_dist[k] <- (mean(shuffled[130:250])-mean(shuffled[1:129]))/
+            (sqrt(((length(shuffled[130:250])-1)*var(shuffled[130:250])+(length(shuffled[1:129])-1)*var(shuffled[1:129]))/
+                    (length(shuffled[130:250])+length(shuffled[1:129])-2))*
+               sqrt(1/length(shuffled[130:250])+1/length(shuffled[1:129])))
+        }
+        obs_stat <- as.numeric((t.test(x = object[i,j,430:550],y = object[i,j,301:429],
+                                     conf.level = 0.95)$statistic))
+      }
+      # lower p_higher means more significant increase in test statistic
+      # lower p_lower means more significant decrease in test statistic
+      p_higher <- sum(rand_dist >= obs_stat)/(n)
+      p_lower <- sum(rand_dist <= obs_stat)/(n)
+      # two-tailed thus multiply smaller p-value by 2
+      all_tests[i,j] <- 2*(min(p_higher,p_lower))
+    }
+    print(i)
+  }
+  return (all_tests)
+}
+```
+
+Method 1:
+randomly wrap uniformly between 1 and T
+```{r}
+unif_wrap_t <- function(object, tone = FALSE) {
+  neurons <- length(object[,1,1])
+  trials <- length(object[1,,1])
+  all_tests <- matrix(NA, nrow = neurons, ncol = trials)
+  # randomization distribution with n = 1000 samples
+  n <- 1000
+  rand_dist <- rep(NA, n)
+  for (i in 1:neurons) {
+    for (j in 1:trials) {
+      if(tone) {
+        combined <- object[i,j,100:400]
+        for (k in 1:n) {
+          wrap_around <- round(runif(1, min=1, max=301), digits = 0)
+          wrapped <- c(combined[wrap_around:length(combined)], combined[1:wrap_around - 1])
+          rand_dist[k] <- as.numeric((t.test(x = wrapped[202:301],y = wrapped[1:201],
+                                    conf.level = 0.95)$statistic))
+        }
+        obs_stat <- as.numeric((t.test(x = object[i,j,301:400],y = object[i,j,100:300],
+                                     conf.level = 0.95)$statistic))
+      }
+      # food/shock
+      else {
+        combined <- object[i,j,301:550]
+        for (k in 1:n) {
+          wrap_around <- round(runif(1, min=1, max=250), digits = 0)
+          wrapped <- c(combined[wrap_around:length(combined)], combined[1:wrap_around - 1])
+          rand_dist[k] <- as.numeric((t.test(x = wrapped[130:250],y = wrapped[1:129],
+                                    conf.level = 0.95)$statistic))
+        }
+        obs_stat <- as.numeric((t.test(x = object[i,j,430:550],y = object[i,j,301:429],
+                                     conf.level = 0.95)$statistic))
+      }
+      # lower p_higher means more significant increase in test statistic
+      # lower p_lower means more significant decrease in test statistic
+      p_higher <- sum(rand_dist >= obs_stat)/(n)
+      p_lower <- sum(rand_dist <= obs_stat)/(n)
+      # two-tailed thus multiply smaller p-value by 2
+      all_tests[i,j] <- 2*(min(p_higher,p_lower))
+    }
+  }
+  return (all_tests)
+}
+```
+
+Method 2:
+Random wrapping with Gaussian centered at middle of time series and
+standard deviation of 50 for tone and 40 for food/shock (arbitrarily chosen) with max min cutoff
+```{r}
+gauss_wrap_t <- function(object, tone = FALSE) {
+  neurons <- length(object[,1,1])
+  trials <- length(object[1,,1])
+  all_tests <- matrix(NA, nrow = neurons, ncol = trials)
+  # randomization distribution with n = 1000 samples
+  n <- 1000
+  rand_dist <- rep(NA, n)
+  for (i in 1:neurons) {
+    for (j in 1:trials) {
+      if(tone) {
+        combined <- object[i,j,100:400]
+        for (k in 1:n) {
+          wrap_around <- round(rtruncnorm(n=1, a=1, b=301, mean=301/2, sd=50),
+                               digits = 0)
+          wrapped <- c(combined[wrap_around:length(combined)], combined[1:wrap_around - 1])
+          rand_dist[k] <- as.numeric((t.test(x = wrapped[202:301],y = wrapped[1:201],
+                                    conf.level = 0.95)$statistic))
+        }
+        obs_stat <- as.numeric((t.test(x = object[i,j,301:400],y = object[i,j,100:300],
+                                     conf.level = 0.95)$statistic))
+      }
+      # food/shock
+      else {
+        combined <- object[i,j,301:550]
+        for (k in 1:n) {
+          wrap_around <- round(rtruncnorm(n=1, a=1, b=250, mean=250/2, sd=40),
+                               digits = 0)
+          wrapped <- c(combined[wrap_around:length(combined)], combined[1:wrap_around - 1])
+          rand_dist[k] <- as.numeric((t.test(x = wrapped[130:250],y = wrapped[1:129],
+                                    conf.level = 0.95)$statistic))
+        }
+        obs_stat <- as.numeric((t.test(x = object[i,j,430:550],y = object[i,j,301:429],
+                                     conf.level = 0.95)$statistic))
+      }
+      # lower p_higher means more significant increase in test statistic
+      # lower p_lower means more significant decrease in test statistic
+      p_higher <- sum(rand_dist >= obs_stat)/(n)
+      p_lower <- sum(rand_dist <= obs_stat)/(n)
+      # two-tailed thus multiply smaller p-value by 2
+      all_tests[i,j] <- 2*(min(p_higher,p_lower))
+    }
+  }
+  return (all_tests)
+}
+```
+
+Method 3:
+K-Chunking with 7 Chunks
+```{r}
+k_chunk_t <- function(object, tone = FALSE) {
+  neurons <- length(object[,1,1])
+  trials <- length(object[1,,1])
+  all_tests <- matrix(NA, nrow = neurons, ncol = trials)
+  # randomization distribution with n = 1000 samples
+  n <- 1000
+  chunks <- 7
+  rand_dist <- rep(NA, n)
+  for (i in 1:neurons) {
+    for (j in 1:trials) {
+      if(tone) {
+        combined <- object[i,j,100:400]
+        for (k in 1:n) {
+          c1 <- combined[1:42]
+          c2 <- combined[43:85]
+          c3 <- combined[86:128]
+          c4 <- combined[129:171]
+          c5 <- combined[172:214]
+          c6 <- combined[215:257]
+          c7 <- combined[258:301]
+          ls <- list(c1,c2,c3,c4,c5,c6,c7)
+          mixed_chunks <- sample(ls)
+          wrapped <- c(mixed_chunks[[1]],mixed_chunks[[2]],
+                   mixed_chunks[[3]],mixed_chunks[[4]],
+                   mixed_chunks[[5]],mixed_chunks[[6]],
+                   mixed_chunks[[7]])
+          rand_dist[k] <- as.numeric((t.test(x = wrapped[202:301],y = wrapped[1:201],
+                                    conf.level = 0.95)$statistic))
+        }
+        obs_stat <- as.numeric((t.test(x = object[i,j,301:400],y = object[i,j,100:300],
+                                     conf.level = 0.95)$statistic))
+      }
+      # food/shock
+      else {
+        combined <- object[i,j,301:550]
+        for (k in 1:n) {
+          c1 <- combined[1:24]
+          c2 <- combined[25:49]
+          c3 <- combined[50:74]
+          c4 <- combined[75:99]
+          c5 <- combined[100:124]
+          c6 <- combined[125:149]
+          c7 <- combined[150:174]
+          c8 <- combined[175:199]
+          c9 <- combined[200:224]
+          c10 <- combined[225:301]
+          ls <- list(c1,c2,c3,c4,c5,c6,c7,c8,c9,c10)
+          mixed_chunks <- sample(ls)
+          wrapped <- c(mixed_chunks[[1]],mixed_chunks[[2]],
+                   mixed_chunks[[3]],mixed_chunks[[4]],
+                   mixed_chunks[[5]],mixed_chunks[[6]],
+                   mixed_chunks[[7]],mixed_chunks[[8]],
+                   mixed_chunks[[9]],mixed_chunks[[10]])
+          rand_dist[k] <- as.numeric((t.test(x = wrapped[130:250],y = wrapped[1:129],
+                                    conf.level = 0.95)$statistic))
+        }
+        obs_stat <- as.numeric((t.test(x = object[i,j,430:550],y = object[i,j,301:429],
+                                     conf.level = 0.95)$statistic))
+      }
+      # lower p_higher means more significant increase in test statistic
+      # lower p_lower means more significant decrease in test statistic
+      p_higher <- sum(rand_dist >= obs_stat)/(n)
+      p_lower <- sum(rand_dist <= obs_stat)/(n)
+      # two-tailed thus multiply smaller p-value by 2
+      all_tests[i,j] <- 2*(min(p_higher,p_lower))
+    }
+  }
+  return (all_tests)
+}
+```
+
+
+```{r}
+day10_Food_shuffle_t <- shuffle_t(Food_Day_10, tone = FALSE)
+day10_Tone_shuffle_t <- shuffle_t(Food_Day_10, tone = TRUE)
+day11_Shock_shuffle_t <- shuffle_t(Shock_Day_11, tone = FALSE)
+day11_Tone_shuffle_t <- shuffle_t(Shock_Day_11, tone = TRUE)
+day12_shuffle_t <- shuffle_t(Test_Day_12, tone = TRUE)
+save(day10_Food_shuffle_t, day10_Tone_shuffle_t, day11_Shock_shuffle_t, day11_Tone_shuffle_t, day12_shuffle_t,file = "shuffle_t.RData")
+
+
+day10_Food_unifwrap_t <- unif_wrap_t(Food_Day_10, tone = FALSE)
+day10_Tone_unifwrap_t <- unif_wrap_t(Food_Day_10, tone = TRUE)
+day11_Shock_unifwrap_t <- unif_wrap_t(Shock_Day_11, tone = FALSE)
+day11_Tone_unifwrap_t <- unif_wrap_t(Shock_Day_11, tone = TRUE)
+day12_unifwrap_t <- unif_wrap_t(Test_Day_12, tone = TRUE)
+save(day10_Food_unifwrap_t, day10_Tone_unifwrap_t, day11_Shock_unifwrap_t, day11_Tone_unifwrap_t, day12_unifwrap_t,file = "unifwrap_t.RData")
+
+day10_Food_gausswrap_t <- gauss_wrap_t(Food_Day_10, tone = FALSE)
+day10_Tone_gausswrap_t <- gauss_wrap_t(Food_Day_10, tone = TRUE)
+day11_Shock_gausswrap_t <- gauss_wrap_t(Shock_Day_11, tone = FALSE)
+day11_Tone_gausswrap_t <- gauss_wrap_t(Shock_Day_11, tone = TRUE)
+day12_gausswrap_t <- gauss_wrap_t(Test_Day_12, tone = TRUE)
+save(day10_Food_gausswrap_t, day10_Tone_gausswrap_t, day11_Shock_gausswrap_t, day11_Tone_gausswrap_t, day12_gausswrap_t,file = "gausswrap_t.RData")
+
+day10_Food_kchunk_t <- k_chunk_t(Food_Day_10, tone = FALSE)
+day10_Tone_kchunk_t <- k_chunk_t(Food_Day_10, tone = TRUE)
+day11_Shock_kchunk_t <- k_chunk_t(Shock_Day_11, tone = FALSE)
+day11_Tone_kchunk_t <- k_chunk_t(Shock_Day_11, tone = TRUE)
+day12_kchunk_t <- k_chunk_t(Test_Day_12, tone = TRUE)
+save(day10_Food_kchunk_t, day10_Tone_kchunk_t, day11_Shock_kchunk_t, day11_Tone_kchunk_t, day12_kchunk_t,file = "kchunk_t.RData")
+```
