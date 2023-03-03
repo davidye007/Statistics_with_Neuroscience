@@ -11,7 +11,8 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 # nuerons x neurons
-dtw_Day_10
+load("adj_dtw.RData")
+#dtw_Day_10
 #dtw_Day_11
 #dtw_Day_12
 ```

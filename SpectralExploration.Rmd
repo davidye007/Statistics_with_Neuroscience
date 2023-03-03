@@ -1,0 +1,33 @@
+---
+title: "SpectralClustering"
+author: "David Ye"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r}
+load("adj_dtw.RData")
+sim_day10 <- to_similar_mat(dtw_Day_10)
+sim_day11 <- to_similar_mat(dtw_Day_11)
+sim_day12 <- to_similar_mat(dtw_Day_12)
+
+degree_matrix10 <- diag(rowSums(sim_day10))
+laplacian <- degree_matrix10 - sim_day10
+lap_eigen <- eigen(laplacian)
+smallest_eigens <-  lap_eigen$vectors[,(length(lap_eigen$values)-4):length(lap_eigen$values)-1]
+
+print(sim_day10)
+```
+
+```{r}
+to_similar_mat <- function(matrix) {
+  for (i in 1:nrow(matrix)) {
+    for (j in 1:ncol(matrix)) {
+      if(matrix[i,j]==0) {
+        matrix[i,j] <- 1
+      }
+    }
+  }
+  return (1/matrix)
+}
+```

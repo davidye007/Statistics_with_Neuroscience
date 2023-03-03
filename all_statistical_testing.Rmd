@@ -1,0 +1,319 @@
+---
+title: "All Statistical Tests"
+author: "David Ye"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+Subset dataset to work faster with
+```{r} 
+load("3D_Activation_Object.RData")
+Food_Day_10 <- Food_Day_10[1:5,,]
+```
+
+Method 0:
+randomly shuffle every point: randomly shuffling every point does not resemble an unstimulated neuron signal
+```{r}
+# randomly shuffle every point and return p-value from a randomized distribution
+shuffle_t <- function(object, tone = FALSE) {
+  # number of neurons
+  neurons <- length(object[,1,1])
+  # number of trials
+  trials <- length(object[1,,1])
+  # empty matrix to store all p-values
+  all_tests <- matrix(NA, nrow = neurons, ncol = trials)
+  # number of randomized tests
+  n <- 1000
+  # empty vector to store p-value of a single portrait
+  rand_dist <- rep(NA, n)
+  # before tone window
+  pre_window_tone <- 100:300
+  # after tone window
+  post_window_tone <- 301:400
+  # before food/shock window
+  pre_window_shock_food <- 301:429
+  # after food/shock window
+  post_window_shock_food <- 430:550
+  # randomized testing on every portrait
+  for (i in 1:neurons) {
+    for (j in 1:trials) {
+      # print((i-1)*trials+j)
+      # for testing tone
+      if(tone) {
+        # entire testing window
+        combined <- object[i,j,c(pre_window_tone,post_window_tone)]
+        # calculate n randomized t statistics
+        for (k in 1:n) {
+          # randomize every point in portrait
+          shuffled <- sample(combined)
+          # pre tone window
+          shuffle_pre <- shuffled[1:length(pre_window_tone)]
+          # post tone window
+          shuffle_post <- shuffled[length(pre_window_tone)+1:length(shuffled)]
+          # store t statistic
+          rand_dist[k] <- as.numeric((t.test(x = shuffle_post,y = shuffle_pre)$statistic))
+        }
+        # t statistic of observed portrait
+        obs_stat <- as.numeric((t.test(x = object[i,j,post_window_tone],
+                                       y = object[i,j,pre_window_tone])$statistic))
+      }
+      # for testing food/shock
+      else {
+        # entire testing window
+        combined <- object[i,j,c(pre_window_shock_food,post_window_shock_food)]
+        # calculate n randomized t statistics
+        for (k in 1:n) {
+          shuffled <- sample(combined)
+          shuffle_pre <- shuffled[1:length(pre_window_shock_food)]
+          shuffle_post <- shuffled[length(pre_window_shock_food)+1:length(shuffled)]
+          rand_dist[k] <- as.numeric((t.test(x = shuffle_post,y = shuffle_pre)$statistic))
+        }
+        #plot(hist(rand_dist))
+        obs_stat <- as.numeric((t.test(x = object[i,j,post_window_shock_food],
+                                       y = object[i,j,pre_window_shock_food])$statistic))
+      }
+      # lower p_higher means more significant increase in observed statistic
+      p_higher <- mean(rand_dist >= obs_stat)
+      # lower p_lower means more significant decrease in observed statistic
+      p_lower <- mean(rand_dist <= obs_stat)
+      # randomized ("null") distribution visualization
+      # plot(hist(rand_dist)) 
+      # two-tailed thus multiply smaller p-value by 2
+      two_sided_p <- 2*(min(p_higher,p_lower))
+      # print(two_sided_p)
+      zero_indic <- 1*10^(-16)
+      if (two_sided_p == 0) {
+        if (p_higher < p_lower) {
+          all_tests[i,j] <- zero_indic
+        }
+        else {
+          all_tests[i,j] <- -1*zero_indic
+        }
+      }
+      else {
+        if(p_higher <= p_lower) {
+          all_tests[i,j] <- two_sided_p
+        }
+        else {
+          all_tests[i,j] <- -1*two_sided_p
+        }
+      }
+    }
+  }
+  return (all_tests)
+}
+```
+
+Method 1:
+randomly wrap uniformly between 1 and T
+```{r}
+unif_wrap_t <- function(object, tone = FALSE) {
+    # number of neurons
+  neurons <- length(object[,1,1])
+  # number of trials
+  trials <- length(object[1,,1])
+  # empty matrix to store all p-values
+  all_tests <- matrix(NA, nrow = neurons, ncol = trials)
+  # number of randomized tests
+  n <- 1000
+  # empty vector to store p-value of a single portrait
+  rand_dist <- rep(NA, n)
+  # before tone window
+  pre_window_tone <- 100:300
+  # after tone window
+  post_window_tone <- 301:400
+  # before food/shock window
+  pre_window_shock_food <- 301:429
+  # after food/shock window
+  post_window_shock_food <- 430:550
+  # randomized testing on every portrait
+  for (i in 1:neurons) {
+    for (j in 1:trials) {
+      # print((i-1)*trials+j)
+      # for testing tone
+      if(tone) {
+        # entire testing window
+        combined <- object[i,j,c(pre_window_tone,post_window_tone)]
+        # store n random points to wrap around
+        wrap_around <- round(runif(n, min=1, max=length(combined)), digits = 0)
+        for (k in 1:n) {
+          # if wrap around 1, then stay as original
+          if (wrap_around[k] != 1) {
+            wrapped <- c(combined[wrap_around[k]:length(combined)], 
+                         combined[1:wrap_around[k] - 1])
+          }
+          else {
+            wrapped <- combined
+          }
+          wrap_pre <- wrapped[1:length(pre_window_tone)]
+          wrap_post <- wrapped[length(pre_window_tone)+1:length(wrapped)]
+          #plot(neuron_activity_portrait_marked(combined))
+          #plot(neuron_activity_portrait_marked(wrapped))
+          rand_dist[k] <- as.numeric((t.test(x = wrap_post,
+                                             y = wrap_pre)$statistic))
+        }
+        obs_stat <- as.numeric((t.test(x = object[i,j,post_window_tone],
+                                       y = object[i,j,pre_window_tone])$statistic))
+      }
+      # for testing food/shock
+      else {
+        # entire testing window
+        combined <- object[i,j,c(pre_window_shock_food,post_window_shock_food)]
+        # store n random points to wrap around
+        wrap_around <- round(runif(n, min=1, max=length(combined)), digits = 0)
+        for (k in 1:n) {
+          # if wrap around 1, then stay as original
+          if (wrap_around[k] != 1) {
+            wrapped <- c(combined[wrap_around[k]:length(combined)], 
+                         combined[1:wrap_around[k] - 1])
+          }
+          else {
+            wrapped <- combined
+          }
+          wrap_pre <- wrapped[1:length(pre_window_shock_food)]
+          wrap_post <- wrapped[length(pre_window_shock_food)+1:length(wrapped)]
+          rand_dist[k] <- as.numeric((t.test(x = wrap_post,
+                                             y = wrap_pre)$statistic))
+        }
+        obs_stat <- as.numeric((t.test(x = object[i,j,post_window_shock_food],
+                                       y = object[i,j,pre_window_shock_food])$statistic))
+      }
+      # lower p_higher means more significant increase in observed statistic
+      p_higher <- mean(rand_dist >= obs_stat)
+      # lower p_lower means more significant decrease in observed statistic
+      p_lower <- mean(rand_dist <= obs_stat)
+      # randomized ("null") distribution visualization
+      # plot(hist(rand_dist)) 
+      # two-tailed thus multiply smaller p-value by 2
+      two_sided_p <- 2*(min(p_higher,p_lower))
+      # print(two_sided_p)
+      zero_indic <- 1*10^(-16)
+      if (two_sided_p == 0) {
+        if (p_higher < p_lower) {
+          all_tests[i,j] <- zero_indic
+        }
+        else {
+          all_tests[i,j] <- -1*zero_indic
+        }
+      }
+      else {
+        if(p_higher <= p_lower) {
+          all_tests[i,j] <- two_sided_p
+        }
+        else {
+          all_tests[i,j] <- -1*two_sided_p
+        }
+      }
+    }
+  }
+  return (all_tests)
+}
+```
+
+Method 3:
+K Even Chunks
+```{r}
+k_chunk_t <- function(object, tone = FALSE) {
+    # number of neurons
+  neurons <- length(object[,1,1])
+  # number of trials
+  trials <- length(object[1,,1])
+  # empty matrix to store all p-values
+  all_tests <- matrix(NA, nrow = neurons, ncol = trials)
+  # number of randomized tests
+  n <- 1000
+  # empty vector to store p-value of a single portrait
+  rand_dist <- rep(NA, n)
+  # before tone window
+  pre_window_tone <- 100:300
+  # after tone window
+  post_window_tone <- 301:400
+  # before food/shock window
+  pre_window_shock_food <- 301:429
+  # after food/shock window
+  post_window_shock_food <- 430:550
+  # number of chunk signal is broken into
+  num_chunks <- 8
+  # randomized testing on every portrait
+  for (i in 1:neurons) {
+    for (j in 1:trials) {
+      # print((i-1)*trials+j)
+      # for testing tone
+      if(tone) {
+        # entire testing window
+        combined <- object[i,j,c(pre_window_tone,post_window_tone)]
+        # plot(neuron_activity_portrait(combined))
+        chunk_size <- round(length(combined)/num_chunks, digits = 0)
+        chunk <- split(combined, ceiling(seq_along(combined)/chunk_size))
+        for (k in 1:n) {
+          wrapped <- sample(chunk)
+          wrapped <- unlist(wrapped)
+          # plot
+          # plot(neuron_activity_portrait_marked(wrapped))
+          pre_wrap <- wrapped[1:length(pre_window_tone)]
+          post_wrap <- wrapped[length(pre_window_tone)+1:length(wrapped)]
+          rand_dist[k] <- as.numeric((t.test(x = post_wrap,
+                                             y = pre_wrap)$statistic))
+        }
+        #plot(hist(rand_dist))
+        obs_stat <- as.numeric((t.test(x = object[i,j,post_window_tone],y = object[i,j,pre_window_tone])$statistic))
+      }
+      # food/shock
+      else {
+        combined <- object[i,j,c(pre_window_shock_food,post_window_shock_food)]
+        # plot
+        chunk_size <- round(length(combined)/num_chunks, digits = 0)
+        chunk <- split(combined, ceiling(seq_along(combined)/chunk_size))
+        for (k in 1:n) {
+          wrapped <- sample(chunk)
+          wrapped <- unlist(wrapped)
+          # plot(neuron_activity_portrait(combined))
+          # plot(neuron_activity_portrait_marked(wrapped))
+          pre_wrap <- wrapped[1:length(pre_window_tone)]
+          post_wrap <- wrapped[length(pre_window_tone)+1:length(wrapped)]
+          rand_dist[k] <- as.numeric((t.test(x = post_wrap,
+                                             y = pre_wrap)$statistic))
+        }
+        #plot(hist(rand_dist))
+        obs_stat <- as.numeric((t.test(x = object[i,j,post_window_shock_food],
+                                       y = object[i,j,pre_window_shock_food])$statistic))
+      }
+      # lower p_higher means more significant increase in observed statistic
+      p_higher <- mean(rand_dist >= obs_stat)
+      # lower p_lower means more significant decrease in observed statistic
+      p_lower <- mean(rand_dist <= obs_stat)
+      # randomized ("null") distribution visualization
+      # plot(hist(rand_dist)) 
+      # two-tailed thus multiply smaller p-value by 2
+      two_sided_p <- 2*(min(p_higher,p_lower))
+      # print(two_sided_p)
+      zero_indic <- 1*10^(-16)
+      if (two_sided_p == 0) {
+        if (p_higher < p_lower) {
+          all_tests[i,j] <- zero_indic
+        }
+        else {
+          all_tests[i,j] <- -1*zero_indic
+        }
+      }
+      else {
+        if(p_higher <= p_lower) {
+          all_tests[i,j] <- two_sided_p
+        }
+        else {
+          all_tests[i,j] <- -1*two_sided_p
+        }
+      }
+    }
+  }
+  return (all_tests)
+}
+```
+
+Test Results
+```{r}
+shuffle_food <- shuffle_t(Food_Day_10, tone = FALSE)
+unif_food <- unif_wrap_t(Food_Day_10, tone = FALSE)
+chunk_food <- k_chunk_t(Food_Day_10, tone = FALSE)
+
+```

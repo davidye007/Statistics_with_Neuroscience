@@ -1,0 +1,63 @@
+
+```{r}
+(mean(post_tone)-mean(pre_tone))/
+    (sqrt(((length(post_tone)-1)*var(post_tone)+(length(pre_tone)-1)*var(pre_tone))/
+            (length(post_tone)+length(pre_tone)-2))*
+       sqrt(1/length(post_tone)+1/length(pre_tone)))
+
+t.test(post_tone,pre_tone,var.equal=T)
+
+```
+
+```{r}
+start.time <- Sys.time()
+for (i in 1:10000) {
+(as.numeric((t.test(x = post_tone,y = pre_tone,
+                         conf.level = 0.95)$statistic)))
+}
+end.time <- Sys.time()
+print(end.time - start.time)
+
+
+start.time <- Sys.time()
+for (i in 1:10000) {
+((mean(post_tone)-mean(pre_tone))/(sqrt(var(post_tone)/length(post_tone)+var(pre_tone)/length(pre_tone))))
+}
+end.time <- Sys.time()
+print(end.time - start.time)
+
+
+
+((mean(post_tone)-mean(pre_tone))/
+    (sqrt(((length(post_tone)-1)*var(post_tone)+(length(pre_tone)-1)*var(pre_tone))/
+            (length(post_tone)+length(pre_tone)-2))*
+       sqrt(1/length(post_tone)+1/length(pre_tone)))
+    
+    
+    
+    
+    (sqrt(var(post_tone)/length(post_tone)+var(pre_tone)/length(pre_tone))))
+
+```
+
+```{r}
+mat1 <- matrix(replicate(100000,post_tone),nrow=length(post_tone))
+a <- rep(0,100000)
+start.time <- Sys.time()
+for (i in 1:100000) {
+  a[] <- mean(mat1[,i])
+}
+end.time <- Sys.time()
+print(end.time - start.time)
+
+library("parallel")
+start.time <- Sys.time()
+cl <- makeCluster(11)
+b <- apply(mat1, 2, mean)
+stopCluster(cl)
+end.time <- Sys.time()
+print(end.time - start.time)
+
+
+
+```
