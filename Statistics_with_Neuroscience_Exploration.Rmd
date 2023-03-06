@@ -18,13 +18,12 @@ load("3D_Activation_Object.RData")
 ```{r neuron activity portrait function}
 ### neuron activity portrait, takes a single vector of a single neuron,
 ### a single trial, and all time points and returns a plot
-neuron_activity_portrait <- function(neuron_activity,spike = 0) {
+neuron_activity_portrait <- function(neuron_activity) {
   timepoints <- 1:length(neuron_activity)
   df <- data.frame(timepoints, neuron_activity)
-  plot <- ggplot(df, aes(x = timepoints, y = neuron_activity)) + geom_path() +
+  plot <- ggplot(df, aes(x = timepoints, y = neuron_activity)) + geom_point() +
     xlab('Time Points') + ylab('dF/F') + ggtitle('Neuron Activity Portrait') +
-    theme(plot.title = element_text(hjust = 0.5)) +
-    geom_vline(xintercept = spike,color = 'red')
+    theme(plot.title = element_text(hjust = 0.5))
   # plot <- ggplot(df, aes(x = timepoints, y = neuron_activity)) + geom_point(shape = 1) +
   #   xlab('Time Points') + ylab('dF/F') + ggtitle('Neuron Activity Portrait') +
   #   theme(plot.title = element_text(hjust = 0.5))
@@ -36,12 +35,67 @@ neuron_activity_portrait <- function(neuron_activity,spike = 0) {
 ### takes in a single vector (single neuron, single trial, and all time points)
 ### and returns a neuron activity portrait with event times marked with vertical lines
 neuron_activity_portrait_marked <- function(activity) {
-    plot <- neuron_activity_portrait(activity) +
-    geom_vline(xintercept = 300) + geom_vline(xintercept = 400) +
-    geom_vline(xintercept = 430,color = 'red')
+    rect_df <- data.frame(xmin = c(301, 430), xmax = c(429, 550), labs = c("pre-food", "post-food"))
+    #colors <- c("Tone End" = "red", "Stimulus" = "blue", "Tone Start" = "green")
+    plot <- neuron_activity_portrait(activity) + geom_rect(aes(xmin = xmin, xmax = xmax, ymin = -Inf, ymax = Inf, fill = labs), alpha = 0.2, data = rect_df, inherit.aes = FALSE) + scale_fill_manual(values = c("blue", "hotpink"), name = c('window'))
+      
+      # geom_vline(aes(xintercept = 300, color = "Tone Start"), size = 0.75) + 
+      # geom_vline(aes(xintercept = 400, color = "Tone End"), size = 0.75) +
+      # geom_vline(aes(xintercept = 430,color = "Stimulus"), size = 0.75) + 
+
     return (plot)
 }
 ```
+
+```{r neuron activity portrait marked function}
+### takes in a single vector (single neuron, single trial, and all time points)
+### and returns a neuron activity portrait with event times marked with vertical lines
+neuron_activity_portrait_stimulus <- function(activity) {
+    # before food/shock window
+    pre_window_shock_food <- 301:429
+    # after food/shock window
+    post_window_shock_food <- 430:550
+    stimulus_window <- c(pre_window_shock_food,post_window_shock_food)
+    rect_df <- data.frame(xmin = c(301, 430), xmax = c(429, 550), labs = c("pre-food", "post-food"))
+    #colors <- c("Tone End" = "red", "Stimulus" = "blue", "Tone Start" = "green")
+    df <- data.frame(stimulus_window, activity[stimulus_window])
+    plot <- ggplot(df, aes(x = stimulus_window, y = activity[stimulus_window])) + geom_point() +
+    xlab('Time Points') + ylab('dF/F') + ggtitle('Neuron Activity Portrait') +
+    theme(plot.title = element_text(hjust = 0.5)) + geom_rect(aes(xmin = xmin, xmax = xmax, ymin = -Inf, ymax = Inf, fill = labs), alpha = 0.2, data = rect_df, inherit.aes = FALSE) + scale_fill_manual(values = c("blue", "hotpink"), name = c('window'))
+      
+      # geom_vline(aes(xintercept = 300, color = "Tone Start"), size = 0.75) + 
+      # geom_vline(aes(xintercept = 400, color = "Tone End"), size = 0.75) +
+      # geom_vline(aes(xintercept = 430,color = "Stimulus"), size = 0.75) + 
+
+    return (plot)
+}
+```
+
+```{r neuron activity portrait marked function}
+### takes in a single vector (single neuron, single trial, and all time points)
+### and returns a neuron activity portrait with event times marked with vertical lines
+neuron_activity_portrait_stimulus_2 <- function(window_activity) {
+    # before food/shock window
+    pre_window_shock_food <- 301:429
+    # after food/shock window
+    post_window_shock_food <- 430:550
+    stimulus_window <- c(pre_window_shock_food,post_window_shock_food)
+    rect_df <- data.frame(xmin = c(301, 430), xmax = c(429, 550), labs = c("pre-food", "post-food"))
+    #colors <- c("Tone End" = "red", "Stimulus" = "blue", "Tone Start" = "green")
+    df <- data.frame(stimulus_window, window_activity)
+    plot <- ggplot(df, aes(x = stimulus_window, y = window_activity)) + geom_point() +
+    xlab('Time Points') + ylab('dF/F') + ggtitle('Neuron Activity Portrait') +
+    theme(plot.title = element_text(hjust = 0.5)) + geom_rect(aes(xmin = xmin, xmax = xmax, ymin = -Inf, ymax = Inf, fill = labs), alpha = 0.2, data = rect_df, inherit.aes = FALSE) + scale_fill_manual(values = c("blue", "hotpink"), name = c('window'))
+      
+      # geom_vline(aes(xintercept = 300, color = "Tone Start"), size = 0.75) + 
+      # geom_vline(aes(xintercept = 400, color = "Tone End"), size = 0.75) +
+      # geom_vline(aes(xintercept = 430,color = "Stimulus"), size = 0.75) + 
+
+    return (plot)
+}
+```
+
+
 
 ```{r boxplot}
 ### returns plot of boxplot comparisons between different stages in the

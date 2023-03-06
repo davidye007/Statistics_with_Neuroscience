@@ -12,6 +12,7 @@ total_activation(Food_Day_10)
 total_activation(Shock_Day_11)
 total_activation(Test_Day_12)
 ```
+
 ```{r}
 rand <- runif(10, min=1, max=500)
 for(y in rand) {

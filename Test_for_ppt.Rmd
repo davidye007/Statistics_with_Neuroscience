@@ -1,0 +1,109 @@
+---
+title: "Recovered"
+author: "David Ye"
+date: '`r Sys.Date()`'
+output: pdf_document
+---
+
+```{r}
+normalized_Day_10 <- normalize_avg(Food_Day_10)
+dtw_Day_10 <- dtwDist(normalized_Day_10,normalized_Day_10)
+```
+
+```{r}
+normalized_Day_11 <-normalize_avg(Shock_Day_11)
+dtw_Day_11 <- dtwDist(normalized_Day_11,normalized_Day_11)
+```
+
+```{r}
+normalized_Day_12 <-normalize_avg(Test_Day_12)
+dtw_Day_12 <- dtwDist(normalized_Day_12,normalized_Day_12)
+```
+
+```{r}
+#save(dtw_Day_10, dtw_Day_11, dtw_Day_12, file = "adj_dtw.RData")
+save(dtw_Day_10, file = "adj_dtw.RData")
+```
+
+
+```{r}
+### takes in a dataset 
+normalize_avg <- function(object) {
+  neurons <- length(object[,1,1])
+  trials <- length(object[1,,1])
+  timesteps <- length(object[1,1,])
+  neuron_average <- matrix(NA, nrow = neurons, ncol = timesteps)
+  ### normalize each trial then average them together
+  for (i in 1:neurons) {
+    sum <- rep(0, timesteps)
+    for (j in 1:trials) {
+      sum <- sum + (object[i,j,] - mean(object[i,j,]))/sd(object[i,j,])
+      print(length(sum))
+      print(sum)
+    }
+    neuron_average[i,] <- sum/trials
+  }
+  return (neuron_average)
+}
+```
+
+```{r}
+# dtw_dist <- function(avg_signals) {
+#   neurons <- length(avg_signals[,1])
+#   dtw_adj <- matrix(NA, nrow = neurons, ncol = neurons)
+#   for (i in 1:neurons) {
+#     for (j in 1:neurons) {
+#       dtw_adj[i,j] <- as.numeric(dtw(i,j,distance.only = T)$distance)
+#     }
+#   }
+#   return (dtw_adj)
+# }
+dtw_dist <- function(avg_signals) {
+  return (dtwDist(avg_signals,avg_signals,distance.only = T))
+}
+```
+
+```{r}
+plot(neuron_activity_portrait_marked(Food_Day_10[1,1,]))
+```
+```{r}
+
+#neuron_activity_portrait_stimulus(Food_Day_10[1,1,])
+#shuffle_t(Food_Day_10)
+
+
+library(tidyverse)
+library(gganimate)
+
+set.seed(42)
+samples <- rnorm(100)
+index <- seq(1:length(samples))
+df <- tibble(value = samples, index = index)
+
+bin_width <- 0.25
+
+count_data <- # some minor data transformation
+  df %>%
+  mutate(x = plyr::round_any(value, bin_width)) %>%
+  group_by(x) %>%
+  mutate(y = seq_along(x))
+
+plot <-
+  ggplot(count_data, aes(group = index, x, y)) + # group by index is important
+  geom_point(size = 5)
+
+p_anim <- 
+  plot +
+  transition_reveal(index)
+
+animate(p_anim, width = 550, height = 230, res = 96)
+```
+
+
+
+```{r}
+for (i in 1:50) {
+  plot(neuron_activity_portrait_marked(Food_Day_10[i,1,]))
+}
+```
+

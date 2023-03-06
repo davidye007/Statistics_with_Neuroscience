@@ -1,0 +1,51 @@
+---
+title: "Clustering Method"
+author: "David Ye"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r}
+library("kernlab")
+```
+
+```{r}
+load("adj_dtw.RData")
+```
+
+```{r}
+dtw_Day_10_non_zero <- dtw_Day_10
+for (i in 1:nrow(dtw_Day_10)) {
+  for (j in 1:ncol(dtw_Day_10)) {
+    if(dtw_Day_10[i,j]==0) {
+      dtw_Day_10_non_zero[i,j] <- 1
+    }
+  }
+}
+similarity <- 1/dtw_Day_10_non_zero
+```
+
+```{r}
+(similarity)
+```
+
+```{r}
+sc <- specc(dtw_Day_10, centers = 3)
+plot(dtw_Day_10, col=sc, pch=4)            # estimated classes (x)
+print(dim(sc))
+```
+
+
+```{r}
+sc2 <- specc(similarity, centers = 3)
+plot(dtw_Day_10, col=sc2, pch=4)            # estimated classes (x)
+print(sc2)
+
+```
+
+```{r}
+min(similarity)
+max(similarity)
+class(similarity)
+dim(similarity)
+```

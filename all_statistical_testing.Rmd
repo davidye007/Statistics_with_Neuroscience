@@ -16,6 +16,7 @@ randomly shuffle every point: randomly shuffling every point does not resemble a
 ```{r}
 # randomly shuffle every point and return p-value from a randomized distribution
 shuffle_t <- function(object, tone = FALSE) {
+  set.seed(2003)
   # number of neurons
   neurons <- length(object[,1,1])
   # number of trials
@@ -61,14 +62,18 @@ shuffle_t <- function(object, tone = FALSE) {
       else {
         # entire testing window
         combined <- object[i,j,c(pre_window_shock_food,post_window_shock_food)]
+         # plot original data in window of food
+        plot(neuron_activity_portrait_stimulus_2(combined))
         # calculate n randomized t statistics
         for (k in 1:n) {
           shuffled <- sample(combined)
+          # plot randomized data in window of food
+          plot(neuron_activity_portrait_stimulus_2(shuffled))
           shuffle_pre <- shuffled[1:length(pre_window_shock_food)]
           shuffle_post <- shuffled[length(pre_window_shock_food)+1:length(shuffled)]
           rand_dist[k] <- as.numeric((t.test(x = shuffle_post,y = shuffle_pre)$statistic))
         }
-        #plot(hist(rand_dist))
+        plot(hist(rand_dist))
         obs_stat <- as.numeric((t.test(x = object[i,j,post_window_shock_food],
                                        y = object[i,j,pre_window_shock_food])$statistic))
       }
@@ -77,7 +82,7 @@ shuffle_t <- function(object, tone = FALSE) {
       # lower p_lower means more significant decrease in observed statistic
       p_lower <- mean(rand_dist <= obs_stat)
       # randomized ("null") distribution visualization
-      # plot(hist(rand_dist)) 
+      # plot(hist(rand_dist))
       # two-tailed thus multiply smaller p-value by 2
       two_sided_p <- 2*(min(p_higher,p_lower))
       # print(two_sided_p)
@@ -147,8 +152,8 @@ unif_wrap_t <- function(object, tone = FALSE) {
           }
           wrap_pre <- wrapped[1:length(pre_window_tone)]
           wrap_post <- wrapped[length(pre_window_tone)+1:length(wrapped)]
-          #plot(neuron_activity_portrait_marked(combined))
-          #plot(neuron_activity_portrait_marked(wrapped))
+          plot(neuron_activity_portrait_marked(combined))
+          plot(neuron_activity_portrait_marked(wrapped))
           rand_dist[k] <- as.numeric((t.test(x = wrap_post,
                                              y = wrap_pre)$statistic))
         }
@@ -183,7 +188,7 @@ unif_wrap_t <- function(object, tone = FALSE) {
       # lower p_lower means more significant decrease in observed statistic
       p_lower <- mean(rand_dist <= obs_stat)
       # randomized ("null") distribution visualization
-      # plot(hist(rand_dist)) 
+      plot(hist(rand_dist)) 
       # two-tailed thus multiply smaller p-value by 2
       two_sided_p <- 2*(min(p_higher,p_lower))
       # print(two_sided_p)
@@ -313,7 +318,7 @@ k_chunk_t <- function(object, tone = FALSE) {
 Test Results
 ```{r}
 shuffle_food <- shuffle_t(Food_Day_10, tone = FALSE)
-unif_food <- unif_wrap_t(Food_Day_10, tone = FALSE)
-chunk_food <- k_chunk_t(Food_Day_10, tone = FALSE)
+#unif_food <- unif_wrap_t(Food_Day_10, tone = FALSE)
+#chunk_food <- k_chunk_t(Food_Day_10, tone = FALSE)
 
 ```
